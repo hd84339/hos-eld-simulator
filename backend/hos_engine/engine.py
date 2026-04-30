@@ -46,7 +46,7 @@ class HOSRulesEngine:
 
         return {
             "status": "approved",
-            "driving_hours": state.driving_hours_today,
-            "on_duty": state.on_duty_hours_today,
-            "cycle_used": state.cycle_used
+            "driving_hours": round(state.driving_hours_today, 2),
+            "on_duty": round(state.on_duty_hours_today, 2),
+            "cycle_used": round(state.cycle_used, 2)
         }

@@ -7,6 +7,7 @@ from rest_framework import status
 
 from .services import RouteEngine
 from hos_engine.engine import HOSRulesEngine, HOSState
+from hos_engine.eld.log_generator import ELDLogGenerator
 
 
 @api_view(['POST'])
@@ -45,11 +46,24 @@ def plan_trip(request):
 
     hos_result = hos_engine.simulate_trip(state, driving_hours)
 
+    eld = ELDLogGenerator()
+    log = eld.generate_daily_log(
+        driving_hours=hos_result["driving_hours"],
+        on_duty_hours=hos_result["on_duty"]
+    )
+
     # -------------------------
     # FINAL RESPONSE
     # -------------------------
     return Response({
         "route": route,
         "hos": hos_result,
+        "eld_log": [
+            {
+                "status": entry.status,
+                "start": entry.start,
+                "end": entry.end
+            } for entry in log
+        ],
         "status": "trip_planned"
     })
