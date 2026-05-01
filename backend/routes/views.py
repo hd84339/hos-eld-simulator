@@ -31,6 +31,7 @@ def plan_trip(request):
     route_engine = RouteEngine()
 
     route = route_engine.plan_route(
+        data["current_location"],
         data["pickup_location"],
         data["dropoff_location"]
     )
@@ -53,18 +54,11 @@ def plan_trip(request):
         )
 
     hos_engine = HOSRulesEngine()
-    state = HOSState(cycle_used=cycle_used)
 
     # convert route time → driving hours
     driving_hours = route["estimated_hours"]
 
-    hos_result = hos_engine.simulate_trip(state, driving_hours)
-
-    eld = ELDLogGenerator()
-    log = eld.generate_daily_log(
-        driving_hours=hos_result["driving_hours"],
-        on_duty_hours=hos_result["on_duty"]
-    )
+    hos_result = hos_engine.simulate_trip(cycle_used, driving_hours)
 
     # -------------------------
     # FINAL RESPONSE
@@ -72,12 +66,5 @@ def plan_trip(request):
     return Response({
         "route": route,
         "hos": hos_result,
-        "eld_log": [
-            {
-                "status": entry.status,
-                "start": entry.start,
-                "end": entry.end
-            } for entry in log
-        ],
         "status": "trip_planned"
-    })
+    })

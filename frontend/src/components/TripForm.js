@@ -9,20 +9,28 @@ export default function TripForm({ setResult }) {
     cycle_used: 0
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError(null);
   };
 
   const submit = async () => {
+    if (!form.current_location || !form.pickup_location || !form.dropoff_location) {
+      setError("Please fill in all locations.");
+      return;
+    }
+    
     setLoading(true);
+    setError(null);
     try {
       const res = await planTrip(form);
       setResult(res.data);
-    } catch (error) {
-      console.error("Failed to plan trip:", error);
-      const msg = error.response?.data?.error || error.response?.data?.message || "Error planning trip. Please check your inputs.";
-      alert(msg);
+    } catch (err) {
+      console.error("Failed to plan trip:", err);
+      const msg = err.response?.data?.error || err.response?.data?.message || "Error planning trip. Please check your inputs.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -33,6 +41,12 @@ export default function TripForm({ setResult }) {
       <h2 style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "10px" }}>
         <span>📍</span> Plan New Trip
       </h2>
+
+      {error && (
+        <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid var(--danger)", color: "#f87171", padding: "0.75rem", borderRadius: "0.5rem", marginBottom: "1rem", fontSize: "0.875rem" }}>
+          <strong>Error:</strong> {error}
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         <div className="form-group">
@@ -79,11 +93,17 @@ export default function TripForm({ setResult }) {
         <button 
           onClick={submit} 
           disabled={loading}
-          style={{ marginTop: "0.5rem", background: loading ? "var(--text-muted)" : "var(--primary)" }}
+          style={{ 
+            marginTop: "0.5rem", 
+            background: loading ? "var(--text-muted)" : "var(--primary)",
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? "not-allowed" : "pointer"
+          }}
         >
-          {loading ? "Calculating Route..." : "Optimize & Plan Trip"}
+          {loading ? "⏳ Calculating Route & Rules..." : "Optimize & Plan Trip"}
         </button>
       </div>
     </div>
   );
 }
+

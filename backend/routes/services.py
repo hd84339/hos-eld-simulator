@@ -33,8 +33,10 @@ class RouteEngine:
     # ----------------------------
     # 2. Get real route from OSRM
     # ----------------------------
-    def get_route(self, start_lat, start_lon, end_lat, end_lon):
-        url = f"http://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{end_lon},{end_lat}"
+    def get_route(self, coordinates):
+        # coordinates is a list of tuples: [(lat, lon), (lat, lon), ...]
+        coord_string = ";".join([f"{lon},{lat}" for lat, lon in coordinates])
+        url = f"http://router.project-osrm.org/route/v1/driving/{coord_string}"
         params = {
             "overview": "full",
             "geometries": "geojson"
@@ -61,20 +63,18 @@ class RouteEngine:
     # ----------------------------
     # 3. Main function
     # ----------------------------
-    def plan_route(self, pickup, dropoff):
+    def plan_route(self, current, pickup, dropoff):
 
-        start = self.get_coordinates(pickup)
-        end = self.get_coordinates(dropoff)
+        curr = self.get_coordinates(current)
+        pick = self.get_coordinates(pickup)
+        drop = self.get_coordinates(dropoff)
 
-        if not start or not end:
+        if not curr or not pick or not drop:
             return {
-                "error": "Invalid location"
+                "error": "One or more locations are invalid"
             }
 
-        route = self.get_route(
-            start[0], start[1],
-            end[0], end[1]
-        )
+        route = self.get_route([curr, pick, drop])
 
         if not route:
             return {
@@ -85,27 +85,9 @@ class RouteEngine:
             "distance_km": round(route["distance_km"], 2),
             "estimated_hours": round(route["duration_hours"], 2),
             "path": route["path"],
-            "stops": self.generate_stops(route["distance_km"])
-        }
-
-    # ----------------------------
-    # 4. Stops logic (unchanged)
-    # ----------------------------
-    def generate_stops(self, distance_km):
-
-        stops = []
-
-        if distance_km > 1600:
-            stops.append({
-                "type": "fuel",
-                "after_km": 1600,
-                "duration_min": 20
-            })
-
-        stops.append({
-            "type": "rest",
-            "after_hours": 8,
-            "duration_min": 30
-        })
-
-        return stops
+            "waypoints": {
+                "current": curr,
+                "pickup": pick,
+                "dropoff": drop
+            }
+        }

@@ -34,13 +34,21 @@ export default function MapView({ route }) {
 
         <Polyline positions={path} color="blue" />
 
-        <Marker position={path[0]}>
-          <Popup>Start</Popup>
-        </Marker>
+        {route.waypoints && (
+          <>
+            <Marker position={[route.waypoints.current[0], route.waypoints.current[1]]}>
+              <Popup><strong>Current Location</strong></Popup>
+            </Marker>
+            
+            <Marker position={[route.waypoints.pickup[0], route.waypoints.pickup[1]]}>
+              <Popup><strong>Pickup Point</strong></Popup>
+            </Marker>
 
-        <Marker position={path[path.length - 1]}>
-          <Popup>End</Popup>
-        </Marker>
+            <Marker position={[route.waypoints.dropoff[0], route.waypoints.dropoff[1]]}>
+              <Popup><strong>Dropoff Point</strong></Popup>
+            </Marker>
+          </>
+        )}
       </MapContainer>
     </div>
   );
