@@ -34,11 +34,11 @@ class HOSRulesEngine:
 
         cycle_ok, cycle_msg = self.check_cycle_limit(state, duty_hours)
         if not cycle_ok:
-            return cycle_msg
+            return {"status": "violation", "message": cycle_msg, "driving_hours": 0, "on_duty": 0}
 
         daily_ok, daily_msg = self.check_daily_limits(state, driving_hours, duty_hours)
         if not daily_ok:
-            return daily_msg
+            return {"status": "violation", "message": daily_msg, "driving_hours": 0, "on_duty": 0}
 
         state.driving_hours_today += driving_hours
         state.on_duty_hours_today += duty_hours

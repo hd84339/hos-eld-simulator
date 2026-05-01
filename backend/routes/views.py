@@ -35,11 +35,25 @@ def plan_trip(request):
         data["dropoff_location"]
     )
 
+    if "error" in route:
+        return Response(
+            {"error": route["error"]},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     # -------------------------
     # 2. HOS ENGINE
     # -------------------------
+    try:
+        cycle_used = float(data["cycle_used"])
+    except (ValueError, TypeError):
+        return Response(
+            {"error": "cycle_used must be a valid number"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     hos_engine = HOSRulesEngine()
-    state = HOSState(cycle_used=float(data["cycle_used"]))
+    state = HOSState(cycle_used=cycle_used)
 
     # convert route time → driving hours
     driving_hours = route["estimated_hours"]
