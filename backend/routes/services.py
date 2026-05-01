@@ -16,16 +16,22 @@ class RouteEngine:
         }
 
         headers = {
-            "User-Agent": "hos-eld-simulator"
+            "User-Agent": "hos-eld-simulator-app/1.0 (test-deployment)"
         }
 
         try:
             response = requests.get(url, params=params, headers=headers, timeout=5)
+            if response.status_code != 200:
+                print(f"Nominatim Error {response.status_code}: {response.text}")
+                return None
+                
             data = response.json()
         except Exception as e:
+            print(f"Nominatim Exception: {e}")
             return None
 
         if not data:
+            print(f"Nominatim No Data for {place}")
             return None
 
         return float(data[0]["lat"]), float(data[0]["lon"])
@@ -43,11 +49,16 @@ class RouteEngine:
         }
         try:
             response = requests.get(url, params=params, timeout=5)
+            if response.status_code != 200:
+                print(f"OSRM Error {response.status_code}: {response.text}")
+                return None
             data = response.json()
-        except Exception:
+        except Exception as e:
+            print(f"OSRM Exception: {e}")
             return None
         
         if "routes" not in data or not data["routes"]:
+            print(f"OSRM No routes found for {coordinates}")
             return None
             
         route = data["routes"][0]

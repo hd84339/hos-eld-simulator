@@ -25,7 +25,11 @@ export default function TripForm({ setResult }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await planTrip(form);
+      const payload = {
+        ...form,
+        cycle_used: form.cycle_used === "" ? 0 : Number(form.cycle_used)
+      };
+      const res = await planTrip(payload);
       setResult(res.data);
     } catch (err) {
       console.error("Failed to plan trip:", err);
