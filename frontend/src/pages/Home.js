@@ -24,6 +24,7 @@ export default function Home() {
         </div>
 
         <div>
+            
           <ELDDashboard data={result} />
         </div>
       </main>
