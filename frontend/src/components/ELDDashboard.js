@@ -82,35 +82,84 @@ export default function ELDDashboard({ data }) {
 
         <h3 style={{ fontSize: "1.125rem", marginBottom: "1rem", color: "var(--text-muted)" }}>ELD Activity Logs (Simulated)</h3>
         
-        {Object.keys(logsByDay).map(day => (
-          <div key={day} style={{ marginBottom: "1.5rem" }}>
-            <h4 style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "0.5rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.25rem" }}>
-              Day {day}
-            </h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {logsByDay[day].map((entry, i) => (
-                <div key={i} style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "0.75rem 1rem",
-                  background: "rgba(255,255,255,0.03)",
-                  borderRadius: "0.5rem",
-                  borderLeft: `4px solid ${getLogBorderColor(entry.status)}`
-                }}>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <strong style={{ fontSize: "0.95rem" }}>{entry.status}</strong>
-                    <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>{entry.note || "HOS Event"}</span>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <span style={{ fontWeight: "600", color: "var(--text-main)" }}>{entry.start.toFixed(2)} → {entry.end.toFixed(2)}</span>
-                    <span style={{ fontSize: "0.75rem", marginLeft: "4px", color: "var(--text-muted)" }}>hrs</span>
-                  </div>
+        {Object.keys(logsByDay).map(day => {
+          const statuses = ['OFF_DUTY', 'SLEEPER', 'DRIVING', 'ON_DUTY'];
+          const statusLabels = ['OFF', 'SB', 'DRV', 'ON'];
+          
+          return (
+            <div key={day} style={{ marginBottom: "2.5rem" }}>
+              <h4 style={{ fontSize: "1rem", color: "var(--text-main)", marginBottom: "1rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.5rem" }}>
+                Day {day} Timeline
+              </h4>
+              
+              <div style={{ display: "flex", position: "relative", height: "160px", backgroundColor: "rgba(0,0,0,0.2)", border: "1px solid var(--border)", borderRadius: "0.5rem", overflow: "hidden" }}>
+                
+                {/* Y-Axis Labels */}
+                <div style={{ width: "50px", display: "flex", flexDirection: "column", borderRight: "1px solid var(--border)", backgroundColor: "rgba(255,255,255,0.02)" }}>
+                  {statusLabels.map((lbl, idx) => (
+                    <div key={idx} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: "600", color: "var(--text-muted)", borderBottom: idx < 3 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                      {lbl}
+                    </div>
+                  ))}
                 </div>
-              ))}
+
+                {/* Grid Area */}
+                <div style={{ flex: 1, position: "relative", display: "flex", flexDirection: "column" }}>
+                  
+                  {/* Background Grid Lines (24 hours) */}
+                  <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", pointerEvents: "none" }}>
+                    {[...Array(24)].map((_, i) => (
+                      <div key={i} style={{ flex: 1, borderRight: "1px dashed rgba(255,255,255,0.05)", position: "relative" }}>
+                        <span style={{ position: "absolute", bottom: "4px", left: "2px", fontSize: "0.6rem", color: "rgba(255,255,255,0.3)" }}>{i}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 4 Rows for Blocks */}
+                  {statuses.map((statusRow, rowIdx) => (
+                    <div key={rowIdx} style={{ flex: 1, position: "relative", borderBottom: rowIdx < 3 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                      {logsByDay[day].filter(l => l.status === statusRow).map((entry, i) => {
+                        const leftPercent = (entry.start / 24) * 100;
+                        const widthPercent = ((entry.end - entry.start) / 24) * 100;
+                        return (
+                          <div 
+                            key={i} 
+                            title={`${entry.status}: ${entry.start.toFixed(2)} - ${entry.end.toFixed(2)} hrs (${entry.note})`}
+                            style={{
+                              position: "absolute",
+                              left: `${leftPercent}%`,
+                              width: `${widthPercent}%`,
+                              top: "20%",
+                              height: "60%",
+                              backgroundColor: getLogBorderColor(entry.status),
+                              borderRadius: "2px",
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.3)",
+                              cursor: "pointer",
+                              opacity: 0.9,
+                              transition: "opacity 0.2s",
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                            onMouseLeave={e => e.currentTarget.style.opacity = 0.9}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Fallback details list below grid for accessibility/readability */}
+              <div style={{ marginTop: "1rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "0.5rem" }}>
+                {logsByDay[day].map((entry, i) => (
+                  <div key={i} style={{ fontSize: "0.75rem", padding: "0.5rem", background: "rgba(255,255,255,0.03)", borderRadius: "4px", borderLeft: `3px solid ${getLogBorderColor(entry.status)}` }}>
+                    <strong>{entry.status}</strong><br/>
+                    <span style={{ color: "var(--text-muted)" }}>{entry.start.toFixed(1)} - {entry.end.toFixed(1)}h</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

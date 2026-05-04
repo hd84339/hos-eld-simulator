@@ -61,10 +61,24 @@ def plan_trip(request):
     hos_result = hos_engine.simulate_trip(cycle_used, driving_hours)
 
     # -------------------------
+    # 3. STOPS MAPPING
+    # -------------------------
+    stops = route_engine.generate_stops(
+        path=route["path"],
+        total_distance_km=route["distance_km"],
+        raw_logs=hos_result.get("raw_logs", [])
+    )
+
+    # Remove raw_logs from response so it doesn't bloat the payload unnecessarily
+    if "raw_logs" in hos_result:
+        del hos_result["raw_logs"]
+
+    # -------------------------
     # FINAL RESPONSE
     # -------------------------
     return Response({
         "route": route,
         "hos": hos_result,
+        "stops": stops,
         "status": "trip_planned"
     })
